@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>پخش‌کننده موزیک شیک</title>
+
+  <!-- فونت فارسی Vazirmatn از Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --card-bg: rgba(255,255,255,0.03);
+      --accent-1: #06b6d4;
+      --accent-2: #3b82f6;
+      --muted: rgba(230,238,246,0.7);
+      --glass: rgba(255,255,255,0.04);
+      --radius: 16px;
+      --transition: 180ms ease;
+      /* PLACEHOLDER FOR BACKGROUND IMAGE
+         Replace the URL below with your background image link
+         Example: url("https://example.com/bg.jpg")
+      */
+      --bg-image: url("https://cdn.honarechehre.ir/images/ab07ef80-10f8-11f0-b077-d94f0227dcb5.webp");
+    }
+
+    html,body{height:100%;margin:0;font-family: "Vazirmatn", "Segoe UI", Roboto, "Helvetica Neue", Arial;direction:rtl}
+    body{
+      background-color:#081026;
+      background-image:
+        radial-gradient(circle at 10% 10%, rgba(59,130,246,0.06), transparent 10%),
+        var(--bg-image);
+      background-size:cover;
+      background-position:center;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:32px;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* Container */
+    .player-wrap{
+      width:min(980px,96%);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid var(--glass);
+      box-shadow: 0 18px 50px rgba(2,6,23,0.7);
+      border-radius: calc(var(--radius) + 4px);
+      padding:28px;
+      display:grid;
+      grid-template-columns: 220px 1fr;
+      gap:20px;
+      align-items:center;
+      backdrop-filter: blur(8px) saturate(120%);
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* Subtle decorative glow */
+    .player-wrap::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(135deg, rgba(6,182,212,0.02), rgba(59,130,246,0.02));
+      pointer-events:none;
+    }
+
+    /* Cover / Logo */
+    .cover{
+      width:220px;
+      height:220px;
+      border-radius:14px;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: 0 12px 30px rgba(2,6,23,0.6);
+      position:relative;
+      transition:transform var(--transition), box-shadow var(--transition);
+    }
+    .cover img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .cover .fallback{
+      color:var(--accent-1);
+      font-weight:800;
+      font-size:34px;
+      letter-spacing:1px;
+      background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .cover[data-playing="true"]{
+      transform:translateY(-6px) scale(1.02);
+      box-shadow: 0 22px 50px rgba(3,10,30,0.7);
+    }
+
+    /* Wave animation */
+    .wave{
+      position:absolute;
+      bottom:8px;
+      left:8px;
+      right:8px;
+      height:10px;
+      display:flex;
+      gap:6px;
+      align-items:end;
+      justify-content:center;
+      pointer-events:none;
+      opacity:0.9;
+    }
+    .wave span{
+      display:block;
+      width:6px;
+      background:linear-gradient(180deg,var(--accent-1),var(--accent-2));
+      border-radius:4px;
+      height:4px;
+      transform-origin:bottom center;
+      transition:height 220ms linear;
+    }
+
+    /* Meta and controls */
+    .meta{
+      padding:6px 2px;
+    }
+    .title{
+      font-size:20px;
+      font-weight:800;
+      margin:0 0 6px 0;
+      color:#e8f6fb;
+    }
+    .artist{
+      margin:0 0 14px 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .controls{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    .btn{
+      background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+      color:#021521;
+      border:0;
+      padding:12px;
+      border-radius:12px;
+      min-width:44px;
+      min-height:44px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform var(--transition), box-shadow var(--transition), opacity var(--transition);
+      box-shadow:0 8px 22px rgba(6,182,212,0.12);
+    }
+    .btn.secondary{
+      background:transparent;
+      color:var(--muted);
+      border:1px solid rgba(255,255,255,0.04);
+      box-shadow:none;
+      padding:10px;
+    }
+    .btn:active{transform:translateY(2px)}
+    .btn:focus{outline:2px solid rgba(99,102,241,0.18); outline-offset:3px}
+
+    /* Seek bar */
+    .seek-row{display:flex;gap:12px;align-items:center}
+    .time{
+      color:var(--muted);
+      font-size:13px;
+      min-width:86px;
+      text-align:right;
+    }
+    input[type="range"].seek{
+      -webkit-appearance:none;
+      appearance:none;
+      height:10px;
+      background:linear-gradient(90deg, rgba(6,182,212,0.6) 0%, rgba(6,182,212,0.6) 0%, rgba(255,255,255,0.06) 0%);
+      border-radius:10px;
+      width:100%;
+      cursor:pointer;
+      transition:box-shadow var(--transition);
+    }
+    input[type="range"].seek::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      width:18px;height:18px;border-radius:50%;
+      background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+      box-shadow:0 6px 18px rgba(6,182,212,0.18);
+      border:3px solid rgba(2,6,23,0.6);
+    }
+
+    /* Volume */
+    .vol{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:var(--muted);
+    }
+    input[type="range"].vol{
+      width:120px;
+      -webkit-appearance:none; appearance:none;
+      height:6px; border-radius:6px; background:rgba(255,255,255,0.04);
+    }
+    input[type="range"].vol::-webkit-slider-thumb{
+      -webkit-appearance:none; width:12px; height:12px; border-radius:50%; background:#fff;
+      box-shadow:0 6px 14px rgba(2,6,23,0.4);
+    }
+
+    /* Extra info */
+    .extra{
+      margin-top:12px;
+      color:rgba(230,238,246,0.6);
+      font-size:13px;
+    }
+
+    /* Responsive */
+    @media(max-width:860px){
+      .player-wrap{grid-template-columns: 160px 1fr}
+      .cover{width:160px;height:160px}
+    }
+    @media(max-width:600px){
+      .player-wrap{grid-template-columns:1fr; text-align:center; padding:20px}
+      .cover{margin:0 auto}
+      .meta{padding-top:8px}
+      .time{display:none}
+      .controls{justify-content:center}
+      .vol input[type="range"].vol{width:96px}
+    }
+  </style>
+</head>
+<body>
+  <main class="player-wrap" role="region" aria-label="Music player">
+    <div class="cover" id="cover" data-playing="false" aria-hidden="false">
+      <!-- PLACEHOLDER FOR COVER LOGO
+           Replace the src value below with your logo or cover image link
+           Example:
+           <img id="coverImg" src="https://example.com/cover.jpg" alt="Artwork">
+      -->
+      <img id="coverImg" src="https://img2.taw-bio.ir/2025/304064/thumbs/450x1738758129.jpeg" alt="Artwork" onerror="this.style.display='none'">
+      <div class="fallback" id="fallbackText">MUSIC</div>
+
+      <div class="wave" aria-hidden="true">
+        <span style="height:6px"></span>
+        <span style="height:8px"></span>
+        <span style="height:4px"></span>
+        <span style="height:7px"></span>
+        <span style="height:5px"></span>
+      </div>
+    </div>
+
+    <section class="meta" aria-live="polite">
+      <h1 class="title" id="title">عنوان آهنگ</h1>
+      <p class="artist" id="artist">نام خواننده یا توضیحات کوتاه</p>
+
+      <div class="controls" role="group" aria-label="کنترل‌های پخش">
+        <button class="btn secondary" id="back10" title="10 ثانیه عقب" aria-label="ده ثانیه عقب">−10s</button>
+        <button class="btn" id="playBtn" title="پخش" aria-label="پخش و مکث">پخش</button>
+        <button class="btn secondary" id="forward10" title="10 ثانیه جلو" aria-label="ده ثانیه جلو">+10s</button>
+
+        <div class="vol" style="margin-left:auto;">
+          <span style="font-size:13px;color:var(--muted)">صدا</span>
+          <input id="vol" class="vol" type="range" min="0" max="1" step="0.01" value="0.85" aria-label="تنظیم صدا">
+        </div>
+      </div>
+
+      <div class="seek-row" style="margin-bottom:6px">
+        <div class="time" id="current">0:00</div>
+        <input id="seek" class="seek" type="range" min="0" max="100" value="0" aria-label="نوار زمان">
+        <div class="time" id="duration">0:00</div>
+      </div>
+
+      <div class="extra">
+        <small id="status">آماده برای پخش</small>
+      </div>
+
+      <!-- پخش‌کننده صوتی مخفی -->
+      <!-- PLACEHOLDER FOR AUDIO SOURCE
+           Replace the src below with your audio file link
+           Example:
+           <source id="audioSource" src="https://example.com/song.mp3" type="audio/mpeg">
+      -->
+      <audio id="audio" preload="metadata">
+        <source id="audioSource" src="./remix_shayea&sorena&maslak&pishro&ribar_khalaasi (2).mp3" type="audio/mpeg">
+        مرورگر شما از پخش صوت پشتیبانی نمی‌کند
+      </audio>
+    </section>
+  </main>
+
+  <script>
+    const audio = document.getElementById('audio');
+    const source = document.getElementById('audioSource');
+    const playBtn = document.getElementById('playBtn');
+    const back10 = document.getElementById('back10');
+    const forward10 = document.getElementById('forward10');
+    const seek = document.getElementById('seek');
+    const vol = document.getElementById('vol');
+    const currentLabel = document.getElementById('current');
+    const durationLabel = document.getElementById('duration');
+    const status = document.getElementById('status');
+    const cover = document.getElementById('cover');
+    const coverImg = document.getElementById('coverImg');
+    const fallbackText = document.getElementById('fallbackText');
+    const waveBars = document.querySelectorAll('.wave span');
+
+    // Initial volume
+    audio.volume = parseFloat(vol.value);
+
+    // Utility: format time mm:ss
+    function fmt(t){
+      if (isNaN(t)) return '0:00';
+      const m = Math.floor(t/60);
+      const s = Math.floor(t%60).toString().padStart(2,'0');
+      return `${m}:${s}`;
+    }
+
+    // Play / Pause
+    playBtn.addEventListener('click', () => {
+      if (audio.paused){
+        audio.play().catch(e => { status.textContent = 'خطا در پخش'; });
+      } else {
+        audio.pause();
+      }
+    });
+
+    // Update play button and visual state
+    audio.addEventListener('play', () => {
+      playBtn.textContent = 'توقف';
+      status.textContent = 'در حال پخش';
+      cover.dataset.playing = "true";
+      fallbackText.style.display = coverImg.complete && coverImg.naturalWidth ? 'none' : 'block';
+      animateWave(true);
+    });
+    audio.addEventListener('pause', () => {
+      playBtn.textContent = 'پخش';
+      status.textContent = 'مکث';
+      cover.dataset.playing = "false";
+      animateWave(false);
+    });
+    audio.addEventListener('ended', () => {
+      playBtn.textContent = 'پخش';
+      status.textContent = 'پایان یافت';
+      seek.value = 0;
+      cover.dataset.playing = "false";
+      animateWave(false);
+    });
+
+    // Metadata loaded
+    audio.addEventListener('loadedmetadata', () => {
+      durationLabel.textContent = fmt(audio.duration);
+      currentLabel.textContent = fmt(0);
+    });
+
+    // Time update
+    audio.addEventListener('timeupdate', () => {
+      if (!isNaN(audio.duration)){
+        const pct = (audio.currentTime / audio.duration) * 100;
+        seek.value = pct;
+        currentLabel.textContent = fmt(audio.currentTime);
+      }
+    });
+
+    // Seek control
+    seek.addEventListener('input', () => {
+      if (!isNaN(audio.duration)){
+        const t = (seek.value / 100) * audio.duration;
+        audio.currentTime = t;
+      }
+    });
+
+    // Volume control
+    vol.addEventListener('input', () => {
+      audio.volume = parseFloat(vol.value);
+    });
+
+    // Skip buttons
+    back10.addEventListener('click', () => { audio.currentTime = Math.max(0, audio.currentTime - 10); });
+    forward10.addEventListener('click', () => { audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 10); });
+
+    // Keyboard shortcuts: Space to play/pause, ArrowLeft/Right to seek, ArrowUp/Down for vol
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space'){ e.preventDefault(); playBtn.click(); }
+      if (e.code === 'ArrowLeft'){ e.preventDefault(); audio.currentTime = Math.max(0, audio.currentTime - 5); }
+      if (e.code === 'ArrowRight'){ e.preventDefault(); audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 5); }
+      if (e.code === 'ArrowUp'){ e.preventDefault(); vol.value = Math.min(1, parseFloat(vol.value) + 0.05); vol.dispatchEvent(new Event('input')); }
+      if (e.code === 'ArrowDown'){ e.preventDefault(); vol.value = Math.max(0, parseFloat(vol.value) - 0.05); vol.dispatchEvent(new Event('input')); }
+    });
+
+    // Simple wave animation during playback
+    let waveInterval = null;
+    function animateWave(on){
+      if (on){
+        if (waveInterval) return;
+        waveInterval = setInterval(() => {
+          waveBars.forEach((b,i) => {
+            const h = 4 + Math.round(Math.random()*14);
+            b.style.height = `${h}px`;
+          });
+        }, 160);
+      } else {
+        clearInterval(waveInterval);
+        waveInterval = null;
+        waveBars.forEach((b,i) => b.style.height = `${4 + (i%3)*2}px`);
+      }
+    }
+
+    // If cover image fails to load, show fallback text
+    coverImg.addEventListener('error', () => {
+      coverImg.style.display = 'none';
+      fallbackText.style.display = 'block';
+    });
+    coverImg.addEventListener('load', () => {
+      if (coverImg.naturalWidth === 0) {
+        coverImg.style.display = 'none';
+        fallbackText.style.display = 'block';
+      } else {
+        coverImg.style.display = 'block';
+        fallbackText.style.display = 'none';
+      }
+    });
+
+    // Optional: set metadata from JS (you can change these values)
+    document.getElementById('title').textContent = 'رپ ریمیکس';
+    document.getElementById('artist').textContent = 'ریمیکس رپ طولانی';
+    // If you prefer to set audio source via JS instead of HTML, uncomment and set:
+    // source.src = "https://example.com/your-song.mp3";
+    // audio.load();
+  </script>
+</body>
+</html>
